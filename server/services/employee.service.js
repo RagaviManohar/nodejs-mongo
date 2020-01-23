@@ -63,7 +63,36 @@ exports.updateMultipleEmployeeByEmail = async(employeeEditRequestList) => {
             name: emp.name,
             updatedAt: new Date(),
         };
-        updatePromiseArray.push(Investor.findOneAndUpdate({ email: emp.email }, updateData));
+        updatePromiseArray.push(Employee.findOneAndUpdate({ email: emp.email }, updateData));
     });
     return Promise.all(updatePromiseArray);
+}
+
+/** This below aggregate will return emails which matches 'isDeleted: false' condition as object array
+ * Example Output:
+[
+    { 'emailList' : [ 'test@gmail.com' ] },
+    { 'emailList' : [ 'test1@gmail.com' ] },
+]
+ */
+exports.getEmailList = async() => {
+    return Employee.aggregate([
+        { $match: { isDeleted: false } },
+        { $group: { _id: '$_id', emailList: { $addToSet: '$email' } } },
+        { $project: { _id: 0, emailList: 1 } },
+    ]);
+}
+
+/** This below aggregate will return emails which matches 'isDeleted: false' condition as single array
+ * Example Output:
+[
+    { 'emailAsSingleArr' : [ 'test@gmail.com', 'test1@gmail.com' ] },
+]
+ */
+exports.getEmailAsSingleArr = async() => {
+    return Employee.aggregate([
+        { $match: { isDeleted: false } },
+        { $group: { _id: null, emailAsSingleArr: { $addToSet: '$email' } } },
+        { $project: { _id: 0, emailAsSingleArr: 1 } }
+    ]);
 }
